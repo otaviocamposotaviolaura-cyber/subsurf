@@ -2,10 +2,10 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>SubSurf Clone</title>
+  <title>SubSurf Clone Melhorado</title>
   <style>
     body { margin: 0; overflow: hidden; background: #222; }
-    canvas { display: block; margin: auto; background: #444; }
+    canvas { display: block; margin: auto; background: #333; }
   </style>
 </head>
 <body>
@@ -18,36 +18,63 @@ const ctx = canvas.getContext("2d");
 canvas.width = 400;
 canvas.height = 600;
 
-let player = { x: 180, y: 500, w: 40, h: 40, lane: 1 };
-let lanes = [100, 180, 260];
+// 4 pistas
+let lanes = [60, 140, 220, 300];
+
+// jogador (com imagem)
+let playerImg = new Image();
+playerImg.src = "https://i.imgur.com/6X12UGD.png"; // sprite simples
+
+let player = { x: lanes[1], y: 480, w: 50, h: 60, lane: 1 };
+
+// trem (obstáculo com textura)
+let trainImg = new Image();
+trainImg.src = "https://i.imgur.com/Z6X9KXG.png";
+
 let obstacles = [];
 let speed = 4;
 let gameOver = false;
+let score = 0;
 
 function spawnObstacle() {
-  let lane = Math.floor(Math.random() * 3);
-  obstacles.push({ x: lanes[lane], y: -40, w: 40, h: 40 });
+  let lane = Math.floor(Math.random() * 4);
+  obstacles.push({ x: lanes[lane], y: -80, w: 60, h: 80 });
 }
 
-setInterval(spawnObstacle, 1200);
+setInterval(spawnObstacle, 1000);
+
+function drawTrack() {
+  ctx.fillStyle = "#555";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.strokeStyle = "#999";
+  ctx.lineWidth = 2;
+
+  for (let i = 1; i < 4; i++) {
+    ctx.beginPath();
+    ctx.moveTo(i * 100, 0);
+    ctx.lineTo(i * 100, canvas.height);
+    ctx.stroke();
+  }
+}
 
 function update() {
   if (gameOver) return;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // player
-  ctx.fillStyle = "#00ffcc";
-  ctx.fillRect(player.x, player.y, player.w, player.h);
+  drawTrack();
 
-  // obstacles
-  ctx.fillStyle = "#ff4444";
+  // jogador
+  ctx.drawImage(playerImg, player.x, player.y, player.w, player.h);
+
+  // obstáculos (trens)
   for (let i = 0; i < obstacles.length; i++) {
     let o = obstacles[i];
     o.y += speed;
-    ctx.fillRect(o.x, o.y, o.w, o.h);
+    ctx.drawImage(trainImg, o.x, o.y, o.w, o.h);
 
-    // collision
+    // colisão
     if (
       player.x < o.x + o.w &&
       player.x + player.w > o.x &&
@@ -55,22 +82,28 @@ function update() {
       player.y + player.h > o.y
     ) {
       gameOver = true;
-      alert("Perdeu. Parabéns pela performance questionável.");
+      alert("Perdeu. Reflexos de uma batata.");
       location.reload();
     }
   }
+
+  // pontuação
+  score++;
+  ctx.fillStyle = "#fff";
+  ctx.font = "20px Arial";
+  ctx.fillText("Score: " + score, 10, 30);
 
   requestAnimationFrame(update);
 }
 
 update();
 
-// controls
+// controles
 window.addEventListener("keydown", (e) => {
   if (e.key === "ArrowLeft" && player.lane > 0) {
     player.lane--;
   }
-  if (e.key === "ArrowRight" && player.lane < 2) {
+  if (e.key === "ArrowRight" && player.lane < 3) {
     player.lane++;
   }
   player.x = lanes[player.lane];
